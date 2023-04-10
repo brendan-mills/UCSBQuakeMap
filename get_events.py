@@ -16,7 +16,7 @@ import pytz
 from obspy.core.event import Catalog
 import pickle
 
-td = timedelta(days=14)
+td = timedelta(days=7)
 pacific = pytz.timezone('US/Pacific')
 
 endtime = datetime.utcnow()
@@ -29,6 +29,7 @@ client.connect()   # Open a connection.
 
 def cat_to_df(cat):
     #sets up empty lists to populate with catalog info
+    ids = []
     times = []
     lats = []
     lons = []
@@ -37,6 +38,7 @@ def cat_to_df(cat):
     magnitudestype = []
     for event in cat:
         if len(event.origins) != 0 and len(event.magnitudes) != 0:
+            ids.append(event.resource_id)
             times.append(event.origins[0].time.datetime)
             lats.append(event.origins[0].latitude)
             lons.append(event.origins[0].longitude)
@@ -44,7 +46,7 @@ def cat_to_df(cat):
             magnitudes.append(event.magnitudes[0].mag)
             magnitudestype.append(event.magnitudes[0].magnitude_type )
             
-    df = pd.DataFrame({'time':times,'lat':lats,'lon':lons,'depth':deps,
+    df = pd.DataFrame({'id':ids,'time':times,'lat':lats,'lon':lons,'depth':deps,
                        'mag':magnitudes,'type':magnitudestype})
     return df
 
@@ -58,13 +60,14 @@ def get_cat(t0, t2):
     else:
         return sub_cat
 
-sub_cat = client.get_events(times=[starttime, endtime],types='eq')
-#df = cat_to_df(get_cat(starttime, endtime))
-#print(df)
+#sub_cat = client.get_events(times=[starttime, endtime],gtypes='l')
+#print(sub_cat[0].resource_id)
+df = cat_to_df(get_cat(starttime, endtime))
+print(df)
 
 # Disconnect from the STP server.
 client.disconnect()
 
 
 
-#df.to_pickle('events.pkl')
+df.to_pickle('events.pkl')
