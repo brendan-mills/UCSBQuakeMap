@@ -14,6 +14,7 @@ import folium
 
 df = pd.read_pickle('events.pkl')
 print(df)
+colors = ['#808080', '#ffff66', '#ff4d4d']
     
 def plot_plotly():
     fig = go.Figure()
@@ -80,14 +81,27 @@ def plot_folium():
     tooltip = "Click for info!"
     
     for i, row in df.iterrows():
+        #this corrects for a magnitude earthquake of 0
         if row['mag'] == 0:
             row['mag'] = 0.001
         time = row['time'].strftime("%m/%d/%Y, %H:%M:%S")
+        td = datetime.now() - row['time']
+        c = colors[0]
+        if td < timedelta(days=1):
+            c = colors[1]
+        elif td < timedelta(hours=1):
+            c = colors[2]
+#        print(td > timedelta(days=1))
+        
+        #set up the text to display
         iframe = folium.IFrame('Time: ' + time + '<br>' + 'Mag: ' + str(row['mag']) + ' ' + row['type'] + '<br>' + 'Depth: ' + str(row['depth']) + f' km<br>SCEDC info <a href="https://scedc.caltech.edu/recent/Quakes/ci{row["id"]}.html" target="_blank">here</a>')
+        
+        #place the marker
         popup = folium.Popup(iframe, min_width=200, max_width=200)
         folium.CircleMarker(location=(row['lat'],row['lon']),
             radius=1.5*row['mag']**2,
-            fill_color='blue',
+            color=c,
+            fill_color=c,
             tooltip=tooltip,
             popup=popup).add_to(m)
     m.save('index.html')
