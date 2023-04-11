@@ -80,11 +80,13 @@ def plot_folium():
     tooltip = "Click for info!"
     
     for i, row in df.iterrows():
+        if row['mag'] == 0:
+            row['mag'] = 0.001
         time = row['time'].strftime("%m/%d/%Y, %H:%M:%S")
         iframe = folium.IFrame('Time: ' + time + '<br>' + 'Mag: ' + str(row['mag']) + ' ' + row['type'] + '<br>' + 'Depth: ' + str(row['depth']) + f' km<br>SCEDC info <a href="https://scedc.caltech.edu/recent/Quakes/ci{row["id"]}.html" target="_blank">here</a>')
         popup = folium.Popup(iframe, min_width=200, max_width=200)
         folium.CircleMarker(location=(row['lat'],row['lon']),
-            radius=0.75*row['mag']**2,
+            radius=1.5*row['mag']**2,
             fill_color='blue',
             tooltip=tooltip,
             popup=popup).add_to(m)
