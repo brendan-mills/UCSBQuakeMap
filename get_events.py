@@ -2,7 +2,6 @@
 Brendan Mills
 
 '''
-
 import numpy as np
 import obspy
 import time
@@ -16,18 +15,11 @@ import pytz
 from obspy.core.event import Catalog
 import pickle
 
-td = timedelta(days=7)
-pacific = pytz.timezone('US/Pacific')
-
-endtime = datetime.utcnow()
-earlier_today = endtime.replace(hour=0, minute=0, second=0, microsecond=0)
-
-starttime =endtime-td
-
-client = STPClient(verbose=True)
-client.connect()   # Open a connection.
-
 def cat_to_df(cat):
+    '''
+    This method takes an obspy catalog and returns a pandas dataframe.
+    The df has columns: event id, time, lat, lon, depth, magnitude, and magnitude type
+    '''
     #sets up empty lists to populate with catalog info
     ids = []
     times = []
@@ -50,9 +42,13 @@ def cat_to_df(cat):
                        'mag':magnitudes,'type':magnitudestype})
     return df
 
-def get_cat(t0, t2):
-    sub_cat = client.get_events(times=[t0, t2],gtypes='l')
-    if len(sub_cat) >= 50:
+def get_cat(cl,t0, t2):
+    '''
+    Recursively gets earthquakes from the client for a given time
+    returns an obspy catalog
+    '''
+    sub_cat = cl.get_events(times=[t0, t2],gtypes='l')
+    if len(sub_cat) >= 90:
         t1 = (t2-t0)/2 + t0
         c1 = get_cat(t0,t1)
         c2 = get_cat(t1,t2)
@@ -60,14 +56,20 @@ def get_cat(t0, t2):
     else:
         return sub_cat
 
+#I want the earthquakes from the past week
+td = timedelta(days=7)
+#pacific = pytz.timezone('US/Pacific')
+endtime = datetime.utcnow()
+starttime =endtime-td
+#earlier_today = endtime.replace(hour=0, minute=0, second=0, microsecond=0)
+
+client = STPClient(verbose=True)
+client.connect()   # Open a connection.
 #sub_cat = client.get_events(times=[starttime, endtime],gtypes='l')
-#print(sub_cat[0].resource_id)
 df = cat_to_df(get_cat(starttime, endtime))
 print(df)
 
 # Disconnect from the STP server.
 client.disconnect()
-
-
 
 df.to_pickle('events.pkl')
