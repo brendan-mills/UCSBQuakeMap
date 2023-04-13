@@ -11,7 +11,6 @@ import pandas as pd
 import pygmt
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
-import pytz
 from obspy.core.event import Catalog
 import pickle
 
@@ -50,8 +49,8 @@ def get_cat(cl,t0, t2):
     sub_cat = cl.get_events(times=[t0, t2],gtypes='l')
     if len(sub_cat) >= 90:
         t1 = (t2-t0)/2 + t0
-        c1 = get_cat(t0,t1)
-        c2 = get_cat(t1,t2)
+        c1 = get_cat(cl, t0, t1)
+        c2 = get_cat(cl, t1, t2)
         return c1 + c2
     else:
         return sub_cat
@@ -66,7 +65,7 @@ starttime =endtime-td
 client = STPClient(verbose=True)
 client.connect()   # Open a connection.
 #sub_cat = client.get_events(times=[starttime, endtime],gtypes='l')
-df = cat_to_df(get_cat(starttime, endtime))
+df = cat_to_df(get_cat(client, starttime, endtime))
 print(df)
 
 # Disconnect from the STP server.
